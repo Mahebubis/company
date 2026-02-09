@@ -8,8 +8,10 @@ import {
   FaEnvelopeOpenText,
   FaSignOutAlt,
   FaGraduationCap,
-  FaUser
+  FaUser,
+  FaIndustry
 } from 'react-icons/fa';
+
 
 const Sidebar = ({ user, onLogout }) => {
   const menuItems = [
@@ -26,11 +28,11 @@ const Sidebar = ({ user, onLogout }) => {
       <div className="p-6 border-b border-emerald-500 border-opacity-50">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white rounded-xl">
-            <FaGraduationCap className="text-3xl text-emerald-600" />
+            <FaIndustry className="text-3xl text-emerald-600" />
           </div>
           <div>
-            <h1 className="text-xl font-bold font-sora">College Portal</h1>
-            <p className="text-xs text-emerald-100 font-sora">TPO Management</p>
+            <h1 className="text-xl font-bold font-sora">Company</h1>
+            <p className="text-xs text-emerald-100 font-sora">Company Management</p>
           </div>
         </div>
       </div>
