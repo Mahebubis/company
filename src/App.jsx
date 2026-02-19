@@ -85,7 +85,8 @@ function App() {
             isAuthenticated ? (
               <div className="flex h-screen bg-gray-50 overflow-hidden">
                 <Sidebar user={user} onLogout={handleLogout} />
-                <div className="flex-1 ml-64 overflow-y-auto">
+                {/* <div className="flex-1 ml-64 overflow-y-auto"> */}
+                <div className="flex-1 overflow-hidden">
                   <Routes>
                     <Route path="/dashboard" element={<Dashboard />} />
                     <Route path="/companies" element={<Companies />} />

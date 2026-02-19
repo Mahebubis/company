@@ -12,6 +12,32 @@ const apiClient = axios.create({
     withCredentials: true,
 });
 
+// Attach token to every request
+apiClient.interceptors.request.use((config) => {
+    const token = localStorage.getItem('tpo_token');
+    if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+});
+
+// Handle 401 Unauthorized globally
+apiClient.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response?.status === 401) {
+            localStorage.removeItem('tpo_token');
+            localStorage.removeItem('tpo_token_expiry');
+            localStorage.removeItem('tpo_user');
+            window.location.href = '/login';
+        }
+        return Promise.reject(
+            error.response?.data || { success: false, message: 'Network error' }
+        );
+    }
+);
+
+
 // API Service
 const apiService = {
     /**
@@ -35,6 +61,33 @@ const apiService = {
             throw error.response?.data || { success: false, message: 'Login failed' };
         }
     },
+
+    /**
+ * Fetch dashboard stats
+ * @returns {Promise}
+ */
+    getDashboardStats: async () => {
+        const response = await apiClient.get('/companies/dashboard.php');
+        return response.data.data;
+    },
+
+    /**
+     * Fetch paginated company list
+     * @param {Object} params
+     * @returns {Promise}
+     */
+    getCompaniesList: async (params = {}) => {
+        const cleanParams = Object.fromEntries(
+            Object.entries(params).filter(([, v]) => v !== '' && v !== null && v !== undefined)
+        );
+
+        const response = await apiClient.get('/auth/list.php', {
+            params: cleanParams,
+        });
+
+        return response.data.data; // { companies, pagination }
+    },
+
 
     /**
      * Validate current session
@@ -106,5 +159,15 @@ const apiService = {
         return true;
     },
 };
+
+export const dashboardApi = {
+    getStats: apiService.getDashboardStats,
+};
+
+export const companiesApi = {
+    list: apiService.getCompaniesList,
+};
+
+
 
 export default apiService;
