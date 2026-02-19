@@ -118,16 +118,16 @@ const NAV_ITEMS = [
 export default function Sidebar() {
   const navigate = useNavigate();
   const getStoredUser = () => {
-  try {
-    const raw = localStorage.getItem('tpo_user');
-    if (!raw || raw === 'undefined') return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-};
+    try {
+      const raw = localStorage.getItem('tpo_user');
+      if (!raw || raw === 'undefined') return null;
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  };
 
-const user = getStoredUser();
+  const user = getStoredUser();
 
 
   const handleLogout = async () => {

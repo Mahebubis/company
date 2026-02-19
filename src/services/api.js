@@ -81,12 +81,26 @@ const apiService = {
             Object.entries(params).filter(([, v]) => v !== '' && v !== null && v !== undefined)
         );
 
-        const response = await apiClient.get('/auth/list.php', {
+        const response = await apiClient.get('/companies/list.php', {
             params: cleanParams,
         });
 
         return response.data.data; // { companies, pagination }
     },
+    /**
+ * Update company
+ * @param {Object} body
+ * @returns {Promise}
+ */
+    updateCompany: async (body) => {
+        try {
+            const response = await apiClient.post('/companies/update.php', body);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || { success: false, message: 'Update failed' };
+        }
+    },
+
 
 
     /**
@@ -167,6 +181,7 @@ export const dashboardApi = {
 export const companiesApi = {
     list: apiService.getCompaniesList,
 };
+
 
 
 
