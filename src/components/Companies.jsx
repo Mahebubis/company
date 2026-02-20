@@ -325,7 +325,7 @@ export default function Companies() {
     no: 44, name: 200, contact: 180, status: 90, verified: 90,
     industry: 180, comment: 160, jobs: 140, registered: 130,
     lastlogin: 120, website: 90, tokens: 90, features: 300,
-    email: 80, login: 120,
+    email: 80, actions: 120,
   });
   const resizing = useRef(null);
   const startX = useRef(0);
@@ -578,13 +578,13 @@ export default function Companies() {
                              focus:outline-none focus:ring-1 focus:ring-indigo-300 bg-white" />
               </ColHeader>
 
-              <ColHeader col="contact" label="Email & Phone" sortKey="employer_email" />
+              {/* <ColHeader col="contact" label="Email & Phone" sortKey="employer_email" /> */}
 
               <ColHeader col="jobs" label="Jobs / Internships" sortKey="job_count" />
               <ColHeader col="registered" label="Registered" sortKey="registered_at" />
               <ColHeader col="lastlogin" label="Last Login" sortKey="last_login" />
 
-              <ColHeader col="features" label="Features" />
+              <ColHeader col="features" label="Features used" />
 
               <ColHeader col="status" label="Status" sortKey="status">
                 <FilterDropdown value={filters.status} onChange={v => setFilter('status', v)}
@@ -620,10 +620,18 @@ export default function Companies() {
               {/* <ColHeader col="email" label="Email" /> */}
 
               {/* sticky login column */}
-              <th style={{ width: colW.login, minWidth: colW.login }}
+              {/* <th style={{ width: colW.actions, minWidth: colW.actions }}
                 className="bg-slate-50 border-b border-r border-slate-200 px-3 py-2
                            text-[10px] font-bold text-slate-500 uppercase sticky right-0
                            shadow-[-6px_0_12px_rgba(0,0,0,0.06)]">
+                Actions
+              </th> */}
+              <th
+                style={{ width: colW.actions, minWidth: colW.actions }}
+                className="bg-slate-50 border-b border-r border-slate-200 px-3 py-2
+             text-[10px] font-bold text-slate-500 uppercase
+             sticky right-0 z-20
+             shadow-[-6px_0_12px_rgba(0,0,0,0.06)]">
                 Actions
               </th>
             </tr>
@@ -669,16 +677,18 @@ export default function Companies() {
                         )
                       }
                       <div className="overflow-hidden">
-                        <p className="font-semibold text-slate-800 text-xs truncate">{c.name}</p>
-                        <p className="text-slate-400 text-[10px]">ID: {c.employer_id}</p>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Email & Phone */}
-                  <td className="px-3 py-2.5 overflow-hidden" style={{ width: colW.contact }}>
+                        <p className="font-semibold text-slate-800 text-[14px] truncate">{c.name}</p>
+                        {/* <p className="text-slate-400 text-[10px]">ID: {c.employer_id}</p> */}
+                        <p className="text-slate-600 text-[12px]">{c.email}</p>
+                        <p className="text-slate-500 text-[11px]">{c.phone ?? '—'}</p>
+                        {/* <div className="px-3 py-2.5 overflow-hidden" style={{ width: colW.contact }}>
                     <p className="text-slate-800 text-xs font-medium truncate">{c.email}</p>
                     <p className="text-slate-400 text-[11px]">{c.phone ?? '—'}</p>
+                  </div> */}
+                      </div>
+                      {/* Email & Phone */}
+                  
+                    </div>
                   </td>
 
 
@@ -686,11 +696,27 @@ export default function Companies() {
                   <td className="px-3 py-2.5" style={{ width: colW.jobs }}>
                     <div className="flex flex-col gap-1">
                       {/* Total clickable */}
-                      <button
+                      {/* <button
                         onClick={() => navigate(`/job-posting?employer_id=${c.employer_id}`)}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg
                                    bg-indigo-600 text-white text-[11px] font-bold
                                    hover:bg-indigo-700 transition-colors w-fit">
+                        {c.job_count} total <ExternalLink size={8} />
+                      </button> */}
+                      <button
+                        onClick={() => {
+                          if (c.job_count > 0) {
+                            navigate(`/job-posting?employer_id=${c.employer_id}`);
+                          }
+                        }}
+                        disabled={c.job_count === 0}
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-lg
+    text-[11px] font-bold w-fit transition-colors
+    ${c.job_count === 0
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          }`}
+                      >
                         {c.job_count} total <ExternalLink size={8} />
                       </button>
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -968,7 +994,7 @@ export default function Companies() {
 
                   {/* Login — sticky right */}
                   {/* <td className="px-3 py-2.5 text-center sticky right-0 shadow-[-6px_0_12px_rgba(0,0,0,0.06)]"
-                    style={{ width: colW.login, background: rowBg }}>
+                    style={{ width: colW.actions, background: rowBg }}>
                     <a href={`https://hire.internshipstudio.com/login?risky_login=${c.employer_id}`}
                       target="_blank" rel="noreferrer"
                       className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg
@@ -980,8 +1006,14 @@ export default function Companies() {
                   </td> */}
 
                   {/* Actions — sticky right */}
-                  <td className="px-3 py-2.5 text-center sticky right-0 shadow-[-6px_0_12px_rgba(0,0,0,0.06)]"
-                    style={{ width: colW.login, background: rowBg }}>
+                  <td
+                    className="px-3 py-2.5 text-center sticky right-0 z-10
+             shadow-[-6px_0_12px_rgba(0,0,0,0.06)]"
+                    style={{
+                      width: colW.actions,
+                      background: rowBg,
+                    }}
+                  >
 
                     <div className="flex flex-col gap-1 items-center">
 
