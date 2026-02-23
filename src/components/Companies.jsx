@@ -1,10 +1,10 @@
 import { useEffect, useState, useRef, useCallback, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Building2, Search, RefreshCw, X, ChevronDown, ChevronUp,
   ChevronsUpDown, LogIn, Globe, ShieldCheck, Shield,
   ExternalLink, SlidersHorizontal, AlertTriangle, Loader2,
-  Mail, MessageSquare, Check, Briefcase, GraduationCap,
+  Mail, MessageSquare, Phone, GraduationCap, Briefcase, Check, // ✅ ADD THIS Check, Briefcase, GraduationCap,
 } from 'lucide-react';
 import apiService from '../services/api';
 
@@ -306,6 +306,7 @@ function FilterDropdown({ value, onChange, options, placeholder, colorFn }) {
 // ─────────────────────────────────────────────────────────────────────────────
 export default function Companies() {
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [companies, setCompanies] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, per_page: 25, total_pages: 1 });
@@ -380,6 +381,16 @@ export default function Companies() {
       fetchCompanies(); // revert
     }
   }, [fetchCompanies]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const searchParam = params.get('search');
+
+    if (searchParam) {
+      setSearch(searchParam);
+      setPage(1);
+    }
+  }, [location.search]);
 
   // ─────────────────────────────────────────────────────────────────────────
   // SORT / FILTER
@@ -677,17 +688,41 @@ export default function Companies() {
                         )
                       }
                       <div className="overflow-hidden">
-                        <p className="font-semibold text-slate-800 text-[14px] truncate">{c.name}</p>
+                        {/* <p className="font-semibold text-slate-800 text-[14px] truncate">{c.name}</p> */}
                         {/* <p className="text-slate-400 text-[10px]">ID: {c.employer_id}</p> */}
-                        <p className="text-slate-600 text-[12px]">{c.email}</p>
-                        <p className="text-slate-500 text-[11px]">{c.phone ?? '—'}</p>
+                        {/* <p className="text-slate-600 text-[12px]">{c.email}</p>
+                        <p className="text-slate-500 text-[11px]">{c.phone ?? '—'}</p> */}
+                        <p className="font-semibold text-slate-800 text-[14px] truncate">
+                          {c.name}
+                        </p>
+
+                        {/* Employer ID */}
+                        <p className="text-[10px] text-slate-400">
+                          ID: {c.employer_id}
+                        </p>
+
+                        {/* Email */}
+                        {c.email && (
+                          <p className="flex items-center gap-1 text-slate-600 text-[11px] truncate">
+                            <Mail size={11} className="text-slate-400" />
+                            {c.email}
+                          </p>
+                        )}
+
+                        {/* Phone */}
+                        {c.phone && (
+                          <p className="flex items-center gap-1 text-slate-500 text-[11px] truncate">
+                            <Phone size={11} className="text-slate-400" />
+                            {c.phone}
+                          </p>
+                        )}
                         {/* <div className="px-3 py-2.5 overflow-hidden" style={{ width: colW.contact }}>
                     <p className="text-slate-800 text-xs font-medium truncate">{c.email}</p>
                     <p className="text-slate-400 text-[11px]">{c.phone ?? '—'}</p>
                   </div> */}
                       </div>
                       {/* Email & Phone */}
-                  
+
                     </div>
                   </td>
 

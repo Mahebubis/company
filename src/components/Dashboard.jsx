@@ -552,7 +552,8 @@ export default function Dashboard() {
                 {(stats?.recent_registrations ?? []).map(c => (
                   <div key={c.employer_id}
                     className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors cursor-pointer"
-                    onClick={() => navigate('/companies')}>
+                    // onClick={() => navigate('/companies')}>
+                    onClick={() => navigate(`/companies?search=${encodeURIComponent(c.email)}`)}>
                     {c.logo
                       ? <img src={c.logo} alt="" className="w-9 h-9 rounded-lg object-contain border border-slate-100 flex-shrink-0" />
                       : (
