@@ -750,6 +750,8 @@ export default function JobPosting() {
   const [pagination, setPagination] = useState({ total: 0, page: 1, per_page: 25, total_pages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [savingNotes, setSavingNotes] = useState({}); // { [jobId]: true/false }
+  const [toast, setToast] = useState(null); // { type, message }
 
   // ── Core filters ──
   const [search, setSearch] = useState('');
@@ -781,7 +783,8 @@ export default function JobPosting() {
   const [colW, setColW] = useState({
     no: 44, title: 220, status: 100, type: 110, mode: 100,
     applications: 260, features: 200, compensation: 150,
-    openings: 160, created: 140, deadline: 130, location: 160,
+    openings: 160, created: 140, deadline: 130, location: 160, actions: 140,
+    notes: 200,
   });
   const resizing = useRef(null);
   const startX = useRef(0);
@@ -918,6 +921,35 @@ export default function JobPosting() {
     appStatusFilter, featuresFilter, postedDateRange, deadlineDateRange,
     featDateRange, appDateRange, locationFilter, compensationFilter, openingsFilter,
   ]);
+
+  const handleSaveNote = async (jobId, note) => {
+    try {
+      setSavingNotes(prev => ({ ...prev, [jobId]: true }));
+
+      await fetch('https://company.internshipstudio.com/api/job_postings/save_note.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          job_id: jobId,
+          note: note,
+        }),
+      });
+
+      // ✅ success toast
+      setToast({ type: 'success', message: 'Note saved successfully' });
+
+    } catch (err) {
+      console.error('Failed to save note', err);
+
+      setToast({ type: 'error', message: 'Failed to save note' });
+    } finally {
+      setSavingNotes(prev => ({ ...prev, [jobId]: false }));
+
+      // auto-hide toast
+      setTimeout(() => setToast(null), 2500);
+    }
+  };
 
   useEffect(() => {
     const t = setTimeout(fetchJobs, search ? 400 : 0);
@@ -1307,6 +1339,25 @@ export default function JobPosting() {
                   onChange={(v) => { setLocationFilter(v); setPage(1); }}
                 />
               </ColHeader>
+
+              {/* Notes */}
+              <ColHeader col="notes" label="Notes">
+                {/* empty (no filter needed) */}
+              </ColHeader>
+
+              {/* Actions */}
+              <th
+                style={{
+                  width: colW.actions,
+                  minWidth: colW.actions,
+                  position: 'sticky',
+                  right: 0,
+                  zIndex: 30,
+                }}
+                className="bg-slate-50 border-b border-l border-slate-200 px-3 py-2 text-[10px] font-bold text-slate-500 uppercase"
+              >
+                Actions
+              </th>
             </tr>
           </thead>
 
@@ -1481,6 +1532,64 @@ export default function JobPosting() {
                   <td className="px-3 py-2.5 text-xs text-slate-600 overflow-hidden" style={{ width: colW.location }}>
                     {j.location ? <p className="truncate">{j.location}</p> : <span className="text-slate-300">—</span>}
                   </td>
+
+                  <td className="px-2 py-2" style={{ width: colW.notes }}>
+                    <div className="flex flex-col gap-1">
+                      <textarea
+                        value={j.note || ''}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setJobs(prev =>
+                            prev.map(job =>
+                              job.job_id === j.job_id ? { ...job, note: val } : job
+                            )
+                          );
+                        }}
+                        placeholder="Add note..."
+                        className="w-full text-[10px] border border-slate-200 rounded p-1
+                 focus:outline-none focus:ring-1 focus:ring-indigo-300 resize-none"
+                        rows={2}
+                      />
+
+                      <button
+                        onClick={() => handleSaveNote(j.job_id, j.note)}
+                        disabled={savingNotes[j.job_id]}
+                        className={`text-[10px] w-fit ml-auto rounded px-2 py-1 transition
+    ${savingNotes[j.job_id]
+                            ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                            : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                          }`}
+                      >
+                        {savingNotes[j.job_id]
+                          ? 'Saving...'
+                          : j.note
+                            ? 'Edit'
+                            : 'Save'}
+                      </button>
+                    </div>
+                  </td>
+
+                  {/* Actions (Sticky Right) */}
+                  <td
+                    style={{
+                      width: colW.actions,
+                      position: 'sticky',
+                      right: 0,
+                      background: '#fff',
+                      zIndex: 10,
+                    }}
+                    className="px-3 py-2 border-l border-slate-200"
+                  >
+                    <a
+                      href={`https://hire.internshipstudio.com/login?risky_login=${j.employer_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center px-2 py-1 rounded-lg text-[11px]
+               bg-indigo-600 text-white hover:bg-indigo-700 transition"
+                    >
+                      Login
+                    </a>
+                  </td>
                 </tr>
               );
             })}
@@ -1515,6 +1624,19 @@ export default function JobPosting() {
             className="px-2 py-1 rounded-lg text-xs border border-slate-200 text-slate-500 disabled:opacity-30 hover:bg-slate-50">»</button>
         </div>
       </div>
+      {toast && (
+        <div className="fixed top-5 right-5 z-[9999]">
+          <div
+            className={`px-4 py-2 rounded-lg shadow-lg text-sm font-medium transition-all
+        ${toast.type === 'success'
+                ? 'bg-emerald-600 text-white'
+                : 'bg-red-600 text-white'
+              }`}
+          >
+            {toast.message}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

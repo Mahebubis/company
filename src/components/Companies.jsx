@@ -26,7 +26,7 @@ const STATUS_OPTIONS = ['active', 'blocked'];
 const VERIFIED_OPTIONS = ['Verified', 'Not Verified'];
 const PER_PAGE_OPTIONS = [10, 25, 50, 100, 200, 500];
 const JOB_TYPE_OPTIONS = ['Jobs', 'Internships'];
-const FEATURE_OPTIONS = ['chat', 'interview', 'assignment', 'database_visit', 'invited'];
+const FEATURE_OPTIONS = ['chat', 'interview', 'assignment', 'database_visit', 'invited', 'saved'];
 
 const INDUSTRY_COLORS = {
   'Information Technology': 'blue', 'Education & Training': 'purple',
@@ -1428,7 +1428,9 @@ export default function Companies() {
                     <div className="rounded-lg border-2 border-slate-200 overflow-hidden shadow-sm bg-white">
                       {/* Header row */}
                       <div className="grid border-b-2 border-slate-200"
-                        style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1fr' }}>
+                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1fr' }}>
+                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
+                        style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
                         <div className="flex items-center justify-center py-1 bg-indigo-50 border-r-2 border-slate-200">
                           <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">JP</span>
                         </div>
@@ -1447,7 +1449,9 @@ export default function Companies() {
                       </div>
                       {/* Sub-header */}
                       <div className="grid border-b border-slate-200 bg-slate-50"
-                        style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
+                        style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
                         <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
                         </div>
@@ -1463,10 +1467,14 @@ export default function Companies() {
                         <div className="flex items-center justify-center py-0.5">
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
                         </div>
+                        <div className="flex items-center justify-center py-0.5">
+                          <span className="text-[10px] font-semibold text-slate-400">S</span>
+                        </div>
                       </div>
                       {/* Data row */}
                       <div className="grid bg-white"
-                        style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
+                        style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
                         <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
                           <FeatureChip count={c.feat_internship_count} active={c.feat_internship_count > 0} title="Internships" />
                         </div>
@@ -1487,6 +1495,9 @@ export default function Companies() {
                         </div>
                         <div className="flex items-center justify-center p-1.5">
                           <FeatureChip count={c.feat_invited_count} active={c.feat_invited_count > 0} title="Invited" />
+                        </div>
+                        <div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_saved_count} active={c.feat_saved_count > 0} title="Saved" />
                         </div>
                       </div>
                     </div>
