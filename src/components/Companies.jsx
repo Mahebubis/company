@@ -21,6 +21,7 @@ const INDUSTRY_OPTIONS = [
   'Food and Beverages', 'Media and Entertainment', 'Consumer Products',
   'Agriculture', 'Legal',
 ];
+const FEATURE_GRID = 'repeat(9, 1fr)';
 const INDUSTRY_TYPE_OPTIONS = ['Startup', 'MNC', 'HR Consultant', 'NGO', 'MSME'];
 const STATUS_OPTIONS = ['active', 'blocked'];
 const VERIFIED_OPTIONS = ['Verified', 'Not Verified'];
@@ -1427,10 +1428,13 @@ export default function Companies() {
                   <td className="px-2 py-2" style={{ width: colW.features }}>
                     <div className="rounded-lg border-2 border-slate-200 overflow-hidden shadow-sm bg-white">
                       {/* Header row */}
-                      <div className="grid border-b-2 border-slate-200"
+                      {/* <div className="grid border-b-2 border-slate-200"
                         // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1fr' }}>
                         // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
-                        style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
+                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
+                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.8fr' }}
+                        style={{ gridTemplateColumns: FEATURE_GRID }}
+                      >
                         <div className="flex items-center justify-center py-1 bg-indigo-50 border-r-2 border-slate-200">
                           <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">JP</span>
                         </div>
@@ -1446,12 +1450,44 @@ export default function Companies() {
                         <div className="flex items-center justify-center py-1 bg-emerald-50">
                           <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">D</span>
                         </div>
+                      </div> */}
+                      <div
+                        className="grid border-b-2 border-slate-200"
+                        style={{ gridTemplateColumns: FEATURE_GRID }}
+                      >
+                        {/* JP spans I + J */}
+                        <div className="col-span-2 flex items-center justify-center py-1 bg-indigo-50 border-r-2 border-slate-200">
+                          <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">JP</span>
+                        </div>
+
+                        {/* C */}
+                        <div className="col-span-1 flex items-center justify-center py-1 bg-sky-50 border-r border-slate-200">
+                          <span className="text-[9px] font-black text-sky-600 uppercase tracking-widest">C</span>
+                        </div>
+
+                        {/* I */}
+                        <div className="col-span-1 flex items-center justify-center py-1 bg-violet-50 border-r border-slate-200">
+                          <span className="text-[9px] font-black text-violet-600 uppercase tracking-widest">I</span>
+                        </div>
+
+                        {/* A */}
+                        <div className="col-span-1 flex items-center justify-center py-1 bg-amber-50 border-r-2 border-slate-200">
+                          <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">A</span>
+                        </div>
+
+                        {/* D spans 4 */}
+                        <div className="col-span-4 flex items-center justify-center py-1 bg-emerald-50">
+                          <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">D</span>
+                        </div>
                       </div>
                       {/* Sub-header */}
-                      <div className="grid border-b border-slate-200 bg-slate-50"
+                      {/* <div className="grid border-b border-slate-200 bg-slate-50"
                         // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
                         // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
-                        style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr 0.5fr' }}
+                        style={{ gridTemplateColumns: FEATURE_GRID }}
+                      >
                         <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
                         </div>
@@ -1468,13 +1504,58 @@ export default function Companies() {
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
                         </div>
                         <div className="flex items-center justify-center py-0.5">
-                          <span className="text-[10px] font-semibold text-slate-400">S</span>
+                          <span className="text-[9px] font-semibold text-slate-400">SV</span>
+                        </div>
+                        <div className="flex items-center justify-center py-0.5">
+                          <span className="text-[9px] font-semibold text-slate-400">S</span>
+                        </div>
+                      </div> */}
+                      <div
+                        className="grid border-b border-slate-200 bg-slate-50"
+                        style={{ gridTemplateColumns: FEATURE_GRID }}
+                      >
+                        {/* JP */}
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">I</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r-2 border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">J</span>
+                        </div>
+
+                        {/* C */}
+                        <div className="border-r border-slate-200" />
+
+                        {/* I */}
+                        <div className="border-r border-slate-200" />
+
+                        {/* A */}
+                        <div className="border-r-2 border-slate-200" />
+
+                        {/* D */}
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">V</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">I</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[9px] font-semibold text-slate-400">SV</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5">
+                          <span className="text-[9px] font-semibold text-slate-400">S</span>
                         </div>
                       </div>
                       {/* Data row */}
                       <div className="grid bg-white"
                         // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
-                        style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
+                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr 0.5fr' }}
+                        style={{ gridTemplateColumns: FEATURE_GRID }}
+                      >
                         <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
                           <FeatureChip count={c.feat_internship_count} active={c.feat_internship_count > 0} title="Internships" />
                         </div>
@@ -1497,7 +1578,11 @@ export default function Companies() {
                           <FeatureChip count={c.feat_invited_count} active={c.feat_invited_count > 0} title="Invited" />
                         </div>
                         <div className="flex items-center justify-center p-1.5">
-                          <FeatureChip count={c.feat_saved_count} active={c.feat_saved_count > 0} title="Saved" />
+                          <FeatureChip count={c.feat_saved_visit_count} active={c.feat_saved_visit_count > 0} title="Saved Visited" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_saved_count} active={c.feat_saved_count > 0} title="Total Saved" />
                         </div>
                       </div>
                     </div>
