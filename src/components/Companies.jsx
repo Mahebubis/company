@@ -21,13 +21,31 @@ const INDUSTRY_OPTIONS = [
   'Food and Beverages', 'Media and Entertainment', 'Consumer Products',
   'Agriculture', 'Legal',
 ];
-const FEATURE_GRID = 'repeat(9, 1fr)';
+// const FEATURE_GRID = 'repeat(9, 1fr)';
+const FEATURE_GRID = 'repeat(15, 1fr)';
 const INDUSTRY_TYPE_OPTIONS = ['Startup', 'MNC', 'HR Consultant', 'NGO', 'MSME'];
 const STATUS_OPTIONS = ['active', 'blocked'];
 const VERIFIED_OPTIONS = ['Verified', 'Not Verified'];
 const PER_PAGE_OPTIONS = [10, 25, 50, 100, 200, 500];
 const JOB_TYPE_OPTIONS = ['Jobs', 'Internships'];
-const FEATURE_OPTIONS = ['chat', 'interview', 'assignment', 'database_visit', 'invited', 'saved'];
+// const FEATURE_OPTIONS = ['chat', 'interview', 'assignment', 'database_visit', 'invited', 'saved'];
+const FEATURE_OPTIONS = [
+  'internship',
+  'job',
+  'chat',
+  'interview',
+  'assignment',
+  'database_visit',
+  'invited',
+  'saved_visit',
+  'saved',
+  'filter_applied',
+  'clicked_resume',
+  'clicked_full_detail',
+  'clicked_invite',
+  'clicked_save',
+  'clicked_unsave'
+];
 
 const INDUSTRY_COLORS = {
   'Information Technology': 'blue', 'Education & Training': 'purple',
@@ -642,32 +660,7 @@ function AppFilterDropdown({ appFilter, setAppFilter, appDateRange, setAppDateRa
               </button>
             ))}
           </div>
-          {/* <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Date Range</p> */}
-          {/* <DateRangeFilter
-            value={tempDateRange}
-            onChange={setTempDateRange}
-            onApply={() => { setAppDateRange(tempDateRange); setPage(1); }}
-            label="Application"
-          /> */}
-          {/* <DateRangeFilter
-            value={tempDateRange}
-            onChange={(v) => {
-              if (!isSingleAppStatus) return;
-              setTempDateRange(v);
-            }}
-            onApply={() => {
-              if (!isSingleAppStatus) return;
-              setAppDateRange(tempDateRange);
-              setPage(1);
-            }}
-            label="Application"
-            disabled={!isSingleAppStatus}
-          />
-          {!isSingleAppStatus && appFilter.length !== 1 && (
-            <p className="text-[9px] text-slate-400 italic mt-1">
-              Select exactly 1 status to enable date filter
-            </p>
-          )} */}
+
           {(appFilter.length > 0 || appDateRange.from || appDateRange.to) && (
             <button onClick={() => { setAppFilter([]); setAppDateRange({ from: '', to: '' }); setTempDateRange({ from: '', to: '' }); }}
               className="w-full mt-2 text-[10px] text-red-400 hover:text-red-600 font-medium border-t border-slate-100 pt-2">
@@ -729,7 +722,7 @@ export default function Companies() {
 
   const [colW, setColW] = useState({
     no: 44, name: 220, jobs: 160, applications: 300, registered: 130,
-    lastlogin: 130, features: 310, status: 100, verified: 100,
+    lastlogin: 130, features: 520, status: 100, verified: 100,
     website: 160, industry: 190, comment: 170, tokens: 160,
     location: 150, actions: 130,
   });
@@ -1000,15 +993,7 @@ export default function Companies() {
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative">
             <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            {/* <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-              placeholder="Name, email, phone…"
-              className="pl-9 pr-8 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300 w-60 bg-slate-50" />
-            {search && (
-              <button onClick={() => { setSearch(''); setPage(1); }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
-                <X size={12} />
-              </button>
-            )} */}
+
             <input
               value={searchInput}
               onChange={e => setSearchInput(e.target.value)}
@@ -1103,12 +1088,7 @@ export default function Companies() {
                 #
               </th>
 
-              {/* Company Name */}
-              {/* <ColHeader col="name" label="Company" sortKey="employer_name">
-                <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
-                  placeholder="Search name…"
-                  className="w-full text-[11px] border border-slate-200 rounded-lg px-2 py-1 focus:outline-none focus:ring-1 focus:ring-indigo-300 bg-white" />
-              </ColHeader> */}
+
               <ColHeader col="name" label="Company" sortKey="employer_name" />
 
               {/* Jobs / Internships */}
@@ -1123,17 +1103,7 @@ export default function Companies() {
                 />
               </ColHeader>
 
-              {/* Total Applications */}
-              {/* <ColHeader col="applications" label="Total Applications"
-                filterActive={appStatusFilter.length > 0 || appDateRange.from || appDateRange.to}>
-                <AppFilterDropdown
-                  appFilter={appStatusFilter}
-                  setAppFilter={setAppStatusFilter}
-                  appDateRange={appDateRange}
-                  setAppDateRange={setAppDateRange}
-                  setPage={setPage}
-                />
-              </ColHeader> */}
+
               <ColHeader
                 col="applications"
                 label="Total Applications"
@@ -1428,34 +1398,43 @@ export default function Companies() {
                   <td className="px-2 py-2" style={{ width: colW.features }}>
                     <div className="rounded-lg border-2 border-slate-200 overflow-hidden shadow-sm bg-white">
                       {/* Header row */}
-                      {/* <div className="grid border-b-2 border-slate-200"
-                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1fr' }}>
-                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
-                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.5fr' }}>
-                        // style={{ gridTemplateColumns: '1fr 0.6fr 0.6fr 0.6fr 1.8fr' }}
+
+                      {/* <div
+                        className="grid border-b-2 border-slate-200"
                         style={{ gridTemplateColumns: FEATURE_GRID }}
                       >
-                        <div className="flex items-center justify-center py-1 bg-indigo-50 border-r-2 border-slate-200">
+                        
+                        <div className="col-span-2 flex items-center justify-center py-1 bg-indigo-50 border-r-2 border-slate-200">
                           <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">JP</span>
                         </div>
-                        <div className="flex items-center justify-center py-1 bg-sky-50 border-r border-slate-200">
+
+                        
+                        <div className="col-span-1 flex items-center justify-center py-1 bg-sky-50 border-r border-slate-200">
                           <span className="text-[9px] font-black text-sky-600 uppercase tracking-widest">C</span>
                         </div>
-                        <div className="flex items-center justify-center py-1 bg-violet-50 border-r border-slate-200">
+
+                        
+                        <div className="col-span-1 flex items-center justify-center py-1 bg-violet-50 border-r border-slate-200">
                           <span className="text-[9px] font-black text-violet-600 uppercase tracking-widest">I</span>
                         </div>
-                        <div className="flex items-center justify-center py-1 bg-amber-50 border-r-2 border-slate-200">
+
+                        
+                        <div className="col-span-1 flex items-center justify-center py-1 bg-amber-50 border-r-2 border-slate-200">
                           <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">A</span>
                         </div>
-                        <div className="flex items-center justify-center py-1 bg-emerald-50">
+
+                        
+                        <div className="col-span-4 flex items-center justify-center py-1 bg-emerald-50">
                           <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">D</span>
                         </div>
                       </div> */}
+
                       <div
                         className="grid border-b-2 border-slate-200"
                         style={{ gridTemplateColumns: FEATURE_GRID }}
                       >
-                        {/* JP spans I + J */}
+
+                        {/* JP */}
                         <div className="col-span-2 flex items-center justify-center py-1 bg-indigo-50 border-r-2 border-slate-200">
                           <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest">JP</span>
                         </div>
@@ -1475,37 +1454,53 @@ export default function Companies() {
                           <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">A</span>
                         </div>
 
-                        {/* D spans 4 */}
-                        <div className="col-span-4 flex items-center justify-center py-1 bg-emerald-50">
+                        {/* D */}
+                        <div className="col-span-5 flex items-center justify-center py-1 bg-emerald-50 border-r-2 border-slate-200">
                           <span className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">D</span>
                         </div>
+
+                        {/* Clicked */}
+                        {/* <div className="col-span-6 flex items-center justify-center py-1 bg-rose-50"> */}
+                        <div className="col-span-5 flex items-center justify-center py-1 bg-rose-50 border-l-2 border-slate-200">
+                          <span className="text-[9px] font-black text-purple-600 uppercase tracking-widest">Clkd</span>
+                        </div>
+
                       </div>
-                      {/* Sub-header */}
-                      {/* <div className="grid border-b border-slate-200 bg-slate-50"
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr 0.5fr' }}
+                      {/* <div
+                        className="grid border-b border-slate-200 bg-slate-50"
                         style={{ gridTemplateColumns: FEATURE_GRID }}
                       >
+
                         <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
                         </div>
+
                         <div className="flex items-center justify-center py-0.5 border-r-2 border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">J</span>
                         </div>
+
+
                         <div className="border-r border-slate-200" />
+
+
                         <div className="border-r border-slate-200" />
+
+
                         <div className="border-r-2 border-slate-200" />
+
+
                         <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">V</span>
                         </div>
-                        <div className="flex items-center justify-center py-0.5">
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
                         </div>
-                        <div className="flex items-center justify-center py-0.5">
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[9px] font-semibold text-slate-400">SV</span>
                         </div>
+
                         <div className="flex items-center justify-center py-0.5">
                           <span className="text-[9px] font-semibold text-slate-400">S</span>
                         </div>
@@ -1514,6 +1509,7 @@ export default function Companies() {
                         className="grid border-b border-slate-200 bg-slate-50"
                         style={{ gridTemplateColumns: FEATURE_GRID }}
                       >
+
                         {/* JP */}
                         <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
                           <span className="text-[8px] font-semibold text-slate-400">I</span>
@@ -1542,18 +1538,42 @@ export default function Companies() {
                         </div>
 
                         <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
-                          <span className="text-[9px] font-semibold text-slate-400">SV</span>
+                          <span className="text-[8px] font-semibold text-slate-400">SV</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">S</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r-2 border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">FA</span>
+                        </div>
+
+                        {/* Clicked */}
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">R</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">F</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">I</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-r border-slate-200">
+                          <span className="text-[8px] font-semibold text-slate-400">S</span>
                         </div>
 
                         <div className="flex items-center justify-center py-0.5">
-                          <span className="text-[9px] font-semibold text-slate-400">S</span>
+                          <span className="text-[8px] font-semibold text-slate-400">U</span>
                         </div>
+
                       </div>
                       {/* Data row */}
-                      <div className="grid bg-white"
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr' }}>
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr' }}>
-                        // style={{ gridTemplateColumns: '0.5fr 0.5fr 0.6fr 0.6fr 0.6fr 0.5fr 0.5fr 0.5fr 0.5fr' }}
+                      {/* <div className="grid bg-white"
+
                         style={{ gridTemplateColumns: FEATURE_GRID }}
                       >
                         <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
@@ -1584,6 +1604,85 @@ export default function Companies() {
                         <div className="flex items-center justify-center p-1.5">
                           <FeatureChip count={c.feat_saved_count} active={c.feat_saved_count > 0} title="Total Saved" />
                         </div>
+
+
+
+                        <div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_filter_applied_count} active={c.feat_filter_applied_count > 0} title="Filter Applied" />
+                        </div><div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_clicked_resume_count} active={c.feat_clicked_resume_count > 0} title="Resume Click" />
+                        </div><div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_clicked_full_detail_count} active={c.feat_clicked_full_detail_count > 0} title="Full Detail Click" />
+                        </div><div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_clicked_invite_count} active={c.feat_clicked_invite_count > 0} title="Invite Click" />
+                        </div><div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_clicked_save_count} active={c.feat_clicked_save_count > 0} title="Save Click" />
+                        </div><div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_clicked_unsave_count} active={c.feat_clicked_unsave_count > 0} title="Unsave Click" />
+                        </div>
+                      </div> */}
+                      <div className="grid bg-white" style={{ gridTemplateColumns: FEATURE_GRID }}>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_internship_count} active={c.feat_internship_count > 0} title="Internships" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r-2 border-slate-200">
+                          <FeatureChip count={c.feat_job_count} active={c.feat_job_count > 0} title="Jobs" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_chat_count} active={c.feat_chat_count > 0} title="Chat" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_interview_count} active={c.feat_interview_count > 0} title="Interview" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r-2 border-slate-200">
+                          <FeatureChip count={c.feat_assignment_count} active={c.feat_assignment_count > 0} title="Assignment" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_visit_count} active={c.feat_visit_count > 0} title="DB Visit" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_invited_count} active={c.feat_invited_count > 0} title="Invited" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_saved_visit_count} active={c.feat_saved_visit_count > 0} title="Saved Visit" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_saved_count} active={c.feat_saved_count > 0} title="Saved" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r-2 border-slate-200">
+                          <FeatureChip count={c.feat_filter_applied_count} active={c.feat_filter_applied_count > 0} title="Filter Applied" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_clicked_resume_count} active={c.feat_clicked_resume_count > 0} title="Resume Click" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_clicked_full_detail_count} active={c.feat_clicked_full_detail_count > 0} title="Full Detail Click" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_clicked_invite_count} active={c.feat_clicked_invite_count > 0} title="Invite Click" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
+                          <FeatureChip count={c.feat_clicked_save_count} active={c.feat_clicked_save_count > 0} title="Save Click" />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5">
+                          <FeatureChip count={c.feat_clicked_unsave_count} active={c.feat_clicked_unsave_count > 0} title="Unsave Click" />
+                        </div>
+
                       </div>
                     </div>
                   </td>
