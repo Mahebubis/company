@@ -16,7 +16,7 @@ import apiService from '../services/api';
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 const JOB_TYPE_OPTIONS = ['internship', 'job', 'contract'];
-const STATUS_OPTIONS = ['Active', 'Close', 'Draft'];
+const STATUS_OPTIONS = ['Active', 'Close', 'in_review', 'rejected'];
 const JOB_MODE_OPTIONS = ['wfo', 'wfh', 'hybrid', 'field'];
 const PER_PAGE_OPTIONS = [10, 25, 50, 100, 200];
 const APPLICATION_STATUS_OPTIONS = ['received', 'shortlisted', 'hired', 'rejected'];
@@ -24,10 +24,17 @@ const FEATURE_OPTIONS = ['chat', 'interview', 'assignment', 'submitted'];
 const COMPENSATION_TYPE_OPTIONS = ['Fixed', 'Negotiable', 'Unpaid', 'Performance Based'];
 const COMPENSATION_PERIOD_OPTIONS = ['month', 'week', 'day', 'hour', 'year', 'project'];
 
+// const STATUS_COLOR = {
+//   Active: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+//   Close: 'bg-red-100 text-red-700 border-red-300',
+//   Draft: 'bg-slate-100 text-slate-600 border-slate-300',
+// };
 const STATUS_COLOR = {
   Active: 'bg-emerald-100 text-emerald-700 border-emerald-300',
   Close: 'bg-red-100 text-red-700 border-red-300',
   Draft: 'bg-slate-100 text-slate-600 border-slate-300',
+  in_review: 'bg-amber-100 text-amber-700 border-amber-300',
+  rejected: 'bg-red-100 text-red-700 border-red-300',
 };
 const TYPE_COLOR = {
   internship: 'bg-violet-100 text-violet-700 border-violet-300',
@@ -735,6 +742,54 @@ function FilterTag({ label, onRemove }) {
   );
 }
 
+function JobRejectModal({ open, onConfirm, onCancel }) {
+  const [note, setNote] = useState('');
+  useEffect(() => { if (open) setNote(''); }, [open]);
+  if (!open) return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }}
+      onClick={onCancel}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <X size={16} />
+          </div>
+          <div>
+            <p className="font-black text-sm">Reject Job Posting</p>
+            <p className="text-[11px] opacity-75">You can optionally add a reason for the recruiter</p>
+          </div>
+        </div>
+        <div className="p-5">
+          <label className="block text-xs font-bold text-slate-600 mb-1.5">
+            Rejection Reason <span className="font-normal text-slate-400">(optional)</span>
+          </label>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            rows={4}
+            placeholder="e.g. Job description is incomplete, salary range missing, misleading title…"
+            className="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none bg-slate-50"
+            autoFocus
+          />
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onCancel}
+            className="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">
+            Cancel
+          </button>
+          <button onClick={() => onConfirm(note)}
+            className="flex-1 py-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-bold hover:from-red-600 hover:to-rose-700 transition-all shadow-sm">
+            Confirm Reject
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -752,6 +807,7 @@ export default function JobPosting() {
   const [error, setError] = useState('');
   const [savingNotes, setSavingNotes] = useState({}); // { [jobId]: true/false }
   const [toast, setToast] = useState(null); // { type, message }
+  const [jobRejectModal, setJobRejectModal] = useState({ open: false, job_id: null, note: '' });
 
   // ── Core filters ──
   const [search, setSearch] = useState('');
@@ -921,6 +977,33 @@ export default function JobPosting() {
     appStatusFilter, featuresFilter, postedDateRange, deadlineDateRange,
     featDateRange, appDateRange, locationFilter, compensationFilter, openingsFilter,
   ]);
+
+  const updateJobStatus = useCallback(async (job_id, action, note = '') => {
+    const newStatus = action === 'activate' ? 'Active' : 'rejected';
+    setJobs(prev => prev.map(j =>
+      j.job_id === String(job_id)
+        ? { ...j, status: newStatus, application_status_note: action === 'reject' ? note : null }
+        : j
+    ));
+    try {
+      const res = await fetch(
+        'https://company.internshipstudio.com/api/job_postings/approve_job_posting.php',
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ job_id, action, note }),
+        }
+      );
+      const data = await res.json();
+      if (data?.data?.email_sent === false) {
+        console.warn('Email failed:', data?.data?.email_error);
+      }
+    } catch {
+      alert('Action failed. Please try again.');
+      fetchJobs();
+    }
+  }, [fetchJobs]);
 
   const handleSaveNote = async (jobId, note) => {
     try {
@@ -1404,8 +1487,41 @@ export default function JobPosting() {
                   </td>
 
                   {/* Status */}
-                  <td className="px-3 py-2.5 text-center" style={{ width: colW.status }}>
+                  {/* <td className="px-3 py-2.5 text-center" style={{ width: colW.status }}>
                     <Badge label={j.status} cls={STATUS_COLOR[j.status] ?? 'bg-slate-100 text-slate-600 border-slate-300'} />
+                  </td> */}
+                  {/* Status */}
+                  <td className="px-3 py-2.5 text-center" style={{ width: colW.status }}>
+                    {j.status === 'in_review' ? (
+                      <div className="flex flex-col items-center gap-1.5">
+                        <Badge label="In Review" cls="bg-amber-100 text-amber-700 border-amber-300" />
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => updateJobStatus(j.job_id, 'activate')}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 text-white text-[10px] font-bold hover:bg-emerald-700 transition-colors shadow-sm">
+                            <Check size={9} /> Active
+                          </button>
+                          <button
+                            onClick={() => setJobRejectModal({ open: true, job_id: j.job_id, note: '' })}
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-500 text-white text-[10px] font-bold hover:bg-red-600 transition-colors shadow-sm">
+                            <X size={9} /> Reject
+                          </button>
+                        </div>
+                      </div>
+                    ) : j.status === 'rejected' ? (
+                      <div className="flex flex-col items-center gap-1">
+                        <Badge label="Rejected" cls="bg-red-100 text-red-700 border-red-300" />
+                        {j.application_status_note && (
+                          <span
+                            title={j.application_status_note}
+                            className="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-2 py-0.5 max-w-[120px] truncate cursor-help">
+                            {j.application_status_note}
+                          </span>
+                        )}
+                      </div>
+                    ) : (
+                      <Badge label={j.status} cls={STATUS_COLOR[j.status] ?? 'bg-slate-100 text-slate-600 border-slate-300'} />
+                    )}
                   </td>
 
                   {/* Type */}
@@ -1624,6 +1740,14 @@ export default function JobPosting() {
             className="px-2 py-1 rounded-lg text-xs border border-slate-200 text-slate-500 disabled:opacity-30 hover:bg-slate-50">»</button>
         </div>
       </div>
+      <JobRejectModal
+        open={jobRejectModal.open}
+        onConfirm={(note) => {
+          updateJobStatus(jobRejectModal.job_id, 'reject', note);
+          setJobRejectModal({ open: false, job_id: null, note: '' });
+        }}
+        onCancel={() => setJobRejectModal({ open: false, job_id: null, note: '' })}
+      />
       {toast && (
         <div className="fixed top-5 right-5 z-[9999]">
           <div

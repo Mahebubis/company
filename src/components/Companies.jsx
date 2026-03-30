@@ -858,6 +858,55 @@ function FilterPopup({ popup, onClose }) {
   );
 }
 
+
+function RejectNoteModal({ open, onConfirm, onCancel }) {
+  const [note, setNote] = useState('');
+  useEffect(() => { if (open) setNote(''); }, [open]);
+  if (!open) return null;
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }}
+      onClick={onCancel}>
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden"
+        onClick={e => e.stopPropagation()}>
+        <div className="flex items-center gap-3 px-5 py-4 bg-gradient-to-r from-red-500 to-rose-600 text-white">
+          <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+            <X size={16} />
+          </div>
+          <div>
+            <p className="font-black text-sm">Reject Database Access</p>
+            <p className="text-[11px] opacity-75">You can optionally add a reason</p>
+          </div>
+        </div>
+        <div className="p-5">
+          <label className="block text-xs font-bold text-slate-600 mb-1.5">
+            Rejection Note <span className="font-normal text-slate-400">(optional)</span>
+          </label>
+          <textarea
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            rows={4}
+            placeholder="e.g. Incomplete company profile, suspicious activity…"
+            className="w-full text-sm border border-slate-200 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-red-300 resize-none bg-slate-50"
+            autoFocus
+          />
+        </div>
+        <div className="flex gap-2 px-5 pb-5">
+          <button onClick={onCancel}
+            className="flex-1 py-2 rounded-xl border border-slate-200 text-slate-600 text-sm font-semibold hover:bg-slate-50 transition-colors">
+            Cancel
+          </button>
+          <button onClick={() => onConfirm(note)}
+            className="flex-1 py-2 rounded-xl bg-gradient-to-r from-red-500 to-rose-600 text-white text-sm font-bold hover:from-red-600 hover:to-rose-700 transition-all shadow-sm">
+            Confirm Reject
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -911,6 +960,8 @@ export default function Companies() {
   const [appDateRange, setAppDateRange] = useState({ from: '', to: '' });
 
   const [httFeatFilter, setHttFeatFilter] = useState([]);
+  const [dbAccessFilter, setDbAccessFilter] = useState('');
+  const [rejectModal, setRejectModal] = useState({ open: false, employer_id: null, note: '' });
 
   const [resetKey, setResetKey] = useState(0);
 
@@ -918,7 +969,7 @@ export default function Companies() {
     no: 44, name: 220, jobs: 160, applications: 300, registered: 130,
     lastlogin: 130, features: 520, status: 100, verified: 100,
     website: 160, industry: 190, comment: 170, tokens: 160,
-    location: 150, actions: 130,
+    location: 150, dbaccess: 180, actions: 130, actions: 130,
   });
   const resizing = useRef(null);
   const startX = useRef(0);
@@ -1015,6 +1066,7 @@ export default function Companies() {
         app_date_from: appDateRange.from,
         app_date_to: appDateRange.to,
         htt_features: httFeatFilter.join(','),
+        db_access_filter: dbAccessFilter,
       };
       if (filters.is_email_verified === 'Verified') params.is_email_verified = 1;
       if (filters.is_email_verified === 'Not Verified') params.is_email_verified = 0;
@@ -1031,7 +1083,7 @@ export default function Companies() {
     search, filters, sortCol, sortDir, page, perPage,
     jobTypeFilter, featuresFilter, featDateRange, registeredDateRange,
     lastLoginDateRange, locationSearch, websiteSearch, noteSearch,
-    tokensFilter, appStatusFilter, appDateRange, isSingleFeature, httFeatFilter
+    tokensFilter, appStatusFilter, appDateRange, isSingleFeature, dbAccessFilter
   ]);
 
   useEffect(() => {
@@ -1046,6 +1098,48 @@ export default function Companies() {
       await apiService.updateCompany({ employer_id, field, value });
     } catch {
       alert('Failed to save. Please try again.');
+      fetchCompanies();
+    }
+  }, [fetchCompanies]);
+
+  // const updateDbRequest = useCallback(async (employer_id, action) => {
+  //   const newStatus = action === 'approve' ? 'approved' : 'rejected';
+  //   setCompanies(prev =>
+  //     prev.map(c => c.employer_id === employer_id ? { ...c, database_request: newStatus } : c)
+  //   );
+  //   try {
+  //     await fetch('https://company.internshipstudio.com/api/companies/approve_database_request.php', {
+  //       method: 'POST',
+  //       credentials: 'include',
+  //       headers: { 'Content-Type': 'application/json' },
+  //       body: JSON.stringify({ employer_id, action }),
+  //     });
+  //   } catch {
+  //     alert('Action failed. Please try again.');
+  //     fetchCompanies();
+  //   }
+  // }, [fetchCompanies]);
+
+  const updateDbRequest = useCallback(async (employer_id, action, note = '') => {
+    const newStatus = action === 'approve' ? 'approved' : 'rejected';
+    // setCompanies(prev =>
+    //   prev.map(c => c.employer_id === employer_id ? { ...c, database_request: newStatus } : c)
+    // );
+    setCompanies(prev =>
+      prev.map(c => c.employer_id === employer_id
+        ? { ...c, database_request: newStatus, database_reject_note: action === 'reject' ? note : null }
+        : c
+      )
+    );
+    try {
+      await fetch('https://company.internshipstudio.com/api/companies/approve_database_request.php', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employer_id, action, note }),
+      });
+    } catch {
+      alert('Action failed. Please try again.');
       fetchCompanies();
     }
   }, [fetchCompanies]);
@@ -1084,6 +1178,7 @@ export default function Companies() {
     setAppStatusFilter([]);
     setAppDateRange({ from: '', to: '' });
     setHttFeatFilter([]);
+    setDbAccessFilter('');
     setResetKey(k => k + 1);
     setPage(1);
   };
@@ -1193,6 +1288,7 @@ export default function Companies() {
       label: `HTT: ${f.replace('htt_', '').replace('_', ' ')}`,
       clear: () => setHttFeatFilter(v => v.filter(x => x !== f))
     }));
+    if (dbAccessFilter) tags.push({ label: `DB Access: ${dbAccessFilter}`, clear: () => setDbAccessFilter('') });
     return tags;
   }, [filters, jobTypeFilter, featuresFilter, featDateRange, registeredDateRange, lastLoginDateRange, locationSearch, websiteSearch, noteSearch, tokensFilter, appStatusFilter, appDateRange]);
 
@@ -1515,6 +1611,22 @@ export default function Companies() {
                   value={tokensFilter}
                   onChange={v => { setTokensFilter(v); setPage(1); }}
                   placeholder={['Min', 'Max']}
+                />
+              </ColHeader>
+
+              {/* <ColHeader col="dbaccess" label="DB Access" /> */}
+              <ColHeader col="dbaccess" label="DB Access" filterActive={!!dbAccessFilter}>
+                <FilterDropdown
+                  value={dbAccessFilter}
+                  onChange={v => { setDbAccessFilter(v); setPage(1); }}
+                  options={['restricted', 'under_review', 'approved', 'rejected']}
+                  placeholder="All"
+                  colorFn={v => ({
+                    restricted: 'gray',
+                    under_review: 'amber',
+                    approved: 'green',
+                    rejected: 'red',
+                  }[v] ?? 'gray')}
                 />
               </ColHeader>
 
@@ -2057,6 +2169,75 @@ export default function Companies() {
                     </div>
                   </td>
 
+                  {/* Database Access */}
+                  <td className="px-3 py-2.5 text-center" style={{ width: colW.dbaccess }}>
+                    {(() => {
+                      const req = c.database_request ?? 'restricted';
+                      if (req === 'approved') {
+                        return (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200">
+                            <ShieldCheck size={11} /> Approved
+                          </span>
+                        );
+                      }
+                      // if (req === 'rejected') {
+                      //   return (
+                      //     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-red-100 text-red-700 border border-red-200">
+                      //       <X size={11} /> Rejected
+                      //     </span>
+                      //   );
+                      // }
+                      if (req === 'rejected') {
+                        return (
+                          <div className="flex flex-col items-center gap-1">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-red-100 text-red-700 border border-red-200">
+                              <X size={11} /> Rejected
+                            </span>
+                            {c.database_reject_note && (
+                              <span
+                                title={c.database_reject_note}
+                                className="text-[10px] text-slate-500 bg-slate-100 border border-slate-200 rounded-lg px-2 py-0.5 max-w-[140px] truncate cursor-help">
+                                {c.database_reject_note}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      }
+                      if (req === 'under_review') {
+                        return (
+                          <div className="flex flex-col gap-1.5 items-center">
+                            <span className="text-[10px] font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
+                              Under Review
+                            </span>
+                            <div className="flex gap-1">
+                              <button
+                                onClick={() => updateDbRequest(c.employer_id, 'approve')}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-600 text-white text-[11px] font-bold hover:bg-emerald-700 transition-colors shadow-sm">
+                                <Check size={10} /> Approve
+                              </button>
+                              {/* <button
+                                onClick={() => updateDbRequest(c.employer_id, 'reject')}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[11px] font-bold hover:bg-red-600 transition-colors shadow-sm">
+                                <X size={10} /> Reject
+                              </button> */}
+                              <button
+                                onClick={() => setRejectModal({ open: true, employer_id: c.employer_id, note: '' })}
+                                className="flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-500 text-white text-[11px] font-bold hover:bg-red-600 transition-colors shadow-sm">
+                                <X size={10} /> Reject
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      }
+                      // restricted (default)
+                      return (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                          <Shield size={11} /> Restricted
+                        </span>
+                      );
+                    })()}
+                  </td>
+
                   {/* Actions — sticky right */}
                   <td className="px-3 py-2.5 text-center sticky right-0 z-10 shadow-[-6px_0_12px_rgba(0,0,0,0.06)]"
                     style={{ width: colW.actions, background: rowBg }}>
@@ -2107,6 +2288,14 @@ export default function Companies() {
         </div>
       </div>
       <FilterPopup popup={popup} onClose={() => setPopup({ open: false, type: '', data: [] })} />
+      <RejectNoteModal
+        open={rejectModal.open}
+        onConfirm={(note) => {
+          updateDbRequest(rejectModal.employer_id, 'reject', note);
+          setRejectModal({ open: false, employer_id: null, note: '' });
+        }}
+        onCancel={() => setRejectModal({ open: false, employer_id: null, note: '' })}
+      />
     </div>
   );
 }
