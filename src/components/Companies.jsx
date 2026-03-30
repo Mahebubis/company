@@ -22,7 +22,7 @@ const INDUSTRY_OPTIONS = [
   'Agriculture', 'Legal',
 ];
 // const FEATURE_GRID = 'repeat(9, 1fr)';
-const FEATURE_GRID = 'repeat(15, 1fr)';
+const FEATURE_GRID = 'repeat(18, 1fr)';
 const INDUSTRY_TYPE_OPTIONS = ['Startup', 'MNC', 'HR Consultant', 'NGO', 'MSME'];
 const STATUS_OPTIONS = ['active', 'blocked'];
 const VERIFIED_OPTIONS = ['Verified', 'Not Verified'];
@@ -44,8 +44,13 @@ const FEATURE_OPTIONS = [
   'clicked_full_detail',
   'clicked_invite',
   'clicked_save',
-  'clicked_unsave'
+  'clicked_unsave',
+  'htt_visit',
+  'htt_saved_filter',
+  'htt_filter_applied',
 ];
+
+const HTT_FEATURE_OPTIONS = ['htt_visit', 'htt_saved_filter', 'htt_filter_applied'];
 
 const INDUSTRY_COLORS = {
   'Information Technology': 'blue', 'Education & Training': 'purple',
@@ -673,6 +678,186 @@ function AppFilterDropdown({ appFilter, setAppFilter, appDateRange, setAppDateRa
   );
 }
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FILTER PAYLOAD VIEWER
+// ─────────────────────────────────────────────────────────────────────────────
+const FILTER_KEY_LABELS = {
+  keyword: 'Keyword', domain_filter: 'Domain', subdomain_filter: 'Subdomain',
+  state_filter: 'State', city_filter: 'City', work_mode: 'Work Mode',
+  interested_in: 'Interested In', availability_type: 'Availability',
+  total_experience_min: 'Exp Min (yrs)', total_experience_max: 'Exp Max (yrs)',
+  ctc_min: 'CTC Min', ctc_max: 'CTC Max', stipend_min: 'Stipend Min',
+  stipend_max: 'Stipend Max', willing_to_relocate: 'Willing to Relocate',
+  preferred_locations: 'Preferred Locations', skills: 'Skills', domains: 'Domains',
+  education: 'Education',
+};
+
+const POPUP_TITLES = {
+  htt_fs: { label: 'HTT Saved Filters', icon: '📌', color: 'from-purple-600 to-violet-600', light: 'purple' },
+  htt_fa: { label: 'HTT Applied Filters', icon: '🎛️', color: 'from-indigo-600 to-blue-600', light: 'indigo' },
+  db_fa: { label: 'Database Applied Filters', icon: '🗃️', color: 'from-emerald-600 to-teal-600', light: 'emerald' },
+};
+
+function isEmptyVal(val) {
+  if (val === null || val === undefined || val === '' || val === false) return true;
+  if (Array.isArray(val)) return val.length === 0;
+  if (typeof val === 'object') return Object.values(val).every(isEmptyVal);
+  return false;
+}
+
+function renderFilterVal(val) {
+  if (val === true) return 'Yes';
+  if (val === false) return 'No';
+  if (Array.isArray(val)) {
+    const flat = val.map(v => (typeof v === 'object' ? JSON.stringify(v) : String(v)));
+    return flat.join(', ');
+  }
+  if (typeof val === 'object' && val !== null) {
+    const entries = Object.entries(val).filter(([, v]) => !isEmptyVal(v));
+    if (entries.length === 0) return null;
+    return (
+      <div className="flex flex-col gap-0.5">
+        {entries.map(([k, v]) => (
+          <span key={k} className="text-[10px]">
+            <span className="font-bold text-slate-500">{k.replace(/_/g, ' ')}: </span>
+            <span className="text-slate-700">{Array.isArray(v) ? v.join(', ') : String(v)}</span>
+          </span>
+        ))}
+      </div>
+    );
+  }
+  return String(val);
+}
+
+const SKIP_KEYS = new Set(['action', 'employer_id', 'filter_type', 'page', 'per_page']);
+
+const CHIP_COLORS = [
+  'bg-blue-50 border-blue-200 text-blue-700',
+  'bg-violet-50 border-violet-200 text-violet-700',
+  'bg-emerald-50 border-emerald-200 text-emerald-700',
+  'bg-amber-50 border-amber-200 text-amber-700',
+  'bg-rose-50 border-rose-200 text-rose-700',
+  'bg-cyan-50 border-cyan-200 text-cyan-700',
+  'bg-indigo-50 border-indigo-200 text-indigo-700',
+];
+
+function FilterPayloadCard({ rawPayload, index }) {
+  let parsed = {};
+  try { parsed = typeof rawPayload === 'string' ? JSON.parse(rawPayload) : (rawPayload ?? {}); } catch { /* noop */ }
+
+  const active = Object.entries(parsed).filter(([k, v]) => !SKIP_KEYS.has(k) && !isEmptyVal(v));
+
+  if (active.length === 0) {
+    return (
+      <div className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-400 italic">
+        No filters applied in this session
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {active.map(([key, val], i) => {
+        const label = FILTER_KEY_LABELS[key] ?? key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const rendered = renderFilterVal(val);
+        if (rendered === null) return null;
+        const colorCls = CHIP_COLORS[i % CHIP_COLORS.length];
+        return (
+          <div key={key}
+            className={`flex flex-col gap-0.5 px-2.5 py-1.5 rounded-xl border ${colorCls} min-w-0 max-w-[260px]`}>
+            <span className="text-[9px] font-black uppercase tracking-wider opacity-70">{label}</span>
+            <span className="text-[11px] font-semibold leading-snug break-words">
+              {typeof rendered === 'string' ? rendered : rendered}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function FilterPopup({ popup, onClose }) {
+  if (!popup.open) return null;
+  const meta = POPUP_TITLES[popup.type] ?? { label: 'Filters', icon: '🔍', color: 'from-slate-600 to-slate-800', light: 'slate' };
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4"
+      style={{ background: 'rgba(15,23,42,0.55)', backdropFilter: 'blur(4px)' }}
+      onClick={onClose}>
+      <div className="relative w-full max-w-2xl max-h-[85vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl"
+        onClick={e => e.stopPropagation()}
+        style={{ background: '#ffffff' }}>
+
+        {/* Header */}
+        <div className={`flex items-center justify-between px-5 py-4 bg-gradient-to-r ${meta.color} text-white flex-shrink-0`}>
+          <div className="flex items-center gap-2.5">
+            <span className="text-xl">{meta.icon}</span>
+            <div>
+              <p className="font-black text-sm tracking-wide">{meta.label}</p>
+              <p className="text-[10px] opacity-75">{popup.data.length} session{popup.data.length !== 1 ? 's' : ''} recorded</p>
+            </div>
+          </div>
+          <button onClick={onClose}
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors">
+            <X size={15} />
+          </button>
+        </div>
+
+        {/* Body */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-3" style={{ background: '#f8fafc' }}>
+          {popup.data.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16 text-slate-400">
+              <span className="text-4xl mb-3">🗂️</span>
+              <p className="font-semibold text-sm">No records found</p>
+              <p className="text-xs mt-1">This employer hasn't used this feature yet</p>
+            </div>
+          ) : (
+            // popup.data.map((item, i) => {
+            (Array.isArray(popup.data) ? popup.data : []).map((item, i) => {
+              const rawPayload = item.filter_payload ?? item.filter_data ?? null;
+              return (
+                <div key={i} className="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                  {/* Session header */}
+                  <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100 bg-slate-50">
+                    <div className="flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center">
+                        <span className="text-[9px] font-black text-indigo-600">#{popup.data.length - i}</span>
+                      </div>
+                      <span className="text-[10px] font-bold text-slate-600">Session</span>
+                    </div>
+                    <div className="flex items-center gap-1 text-[10px] text-slate-400">
+                      <Calendar size={9} />
+                      {item.created_at ? dayjs(item.created_at).format('DD MMM YYYY hh:mm A') : 'Unknown time'}
+                    </div>
+                  </div>
+
+                  {/* Filter chips */}
+                  <div className="p-3">
+                    {rawPayload
+                      ? <FilterPayloadCard rawPayload={rawPayload} index={i} />
+                      : <p className="text-xs text-slate-400 italic">No payload data</p>}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex items-center justify-between px-5 py-3 border-t border-slate-100 bg-white flex-shrink-0">
+          <span className="text-[10px] text-slate-400">{popup.data.length} record{popup.data.length !== 1 ? 's' : ''}</span>
+          <button onClick={onClose}
+            className="px-4 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -684,6 +869,12 @@ export default function Companies() {
   const [pagination, setPagination] = useState({ total: 0, page: 1, per_page: 25, total_pages: 1 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const [popup, setPopup] = useState({
+    open: false,
+    type: '',
+    data: []
+  });
 
 
   // Core filters
@@ -718,6 +909,9 @@ export default function Companies() {
   // Application filter
   const [appStatusFilter, setAppStatusFilter] = useState([]);
   const [appDateRange, setAppDateRange] = useState({ from: '', to: '' });
+
+  const [httFeatFilter, setHttFeatFilter] = useState([]);
+
   const [resetKey, setResetKey] = useState(0);
 
   const [colW, setColW] = useState({
@@ -820,6 +1014,7 @@ export default function Companies() {
         app_status: appStatusFilter.join(','),
         app_date_from: appDateRange.from,
         app_date_to: appDateRange.to,
+        htt_features: httFeatFilter.join(','),
       };
       if (filters.is_email_verified === 'Verified') params.is_email_verified = 1;
       if (filters.is_email_verified === 'Not Verified') params.is_email_verified = 0;
@@ -836,7 +1031,7 @@ export default function Companies() {
     search, filters, sortCol, sortDir, page, perPage,
     jobTypeFilter, featuresFilter, featDateRange, registeredDateRange,
     lastLoginDateRange, locationSearch, websiteSearch, noteSearch,
-    tokensFilter, appStatusFilter, appDateRange, isSingleFeature,
+    tokensFilter, appStatusFilter, appDateRange, isSingleFeature, httFeatFilter
   ]);
 
   useEffect(() => {
@@ -888,10 +1083,40 @@ export default function Companies() {
     setTokensFilter({});
     setAppStatusFilter([]);
     setAppDateRange({ from: '', to: '' });
+    setHttFeatFilter([]);
     setResetKey(k => k + 1);
     setPage(1);
   };
+  const openPopup = async (type, employer_id) => {
+    try {
+      let url = '';
 
+      if (type === 'htt_fs') {
+        url = `https://company.internshipstudio.com/api/companies/get_htt_saved_filters.php?employer_id=${employer_id}`;
+      } else if (type === 'htt_fa') {
+        url = `https://company.internshipstudio.com/api/companies/get_htt_applied_filters.php?employer_id=${employer_id}`;
+      } else if (type === 'db_fa') {
+        url = `https://company.internshipstudio.com/api/companies/get_database_filters.php?employer_id=${employer_id}`;
+      }
+
+      const res = await fetch(url);
+      const data = await res.json();
+
+      // setPopup({
+      //   open: true,
+      //   type,
+      //   data: data.data || []
+      // });
+      setPopup({
+        open: true,
+        type,
+        data: Array.isArray(data?.data?.data) ? data.data.data : []
+      });
+
+    } catch (e) {
+      console.error(e);
+    }
+  };
   // ─── COLUMN RESIZE ────────────────────────────────────────────────────────
   const startResize = useCallback((col, e) => {
     e.preventDefault();
@@ -964,10 +1189,12 @@ export default function Companies() {
     if (tokensFilter.min || tokensFilter.max) tags.push({ label: `Tokens: ${tokensFilter.min || 0}–${tokensFilter.max || '∞'}`, clear: () => setTokensFilter({}) });
     appStatusFilter.forEach(s => tags.push({ label: `App: ${s}`, clear: () => setAppStatusFilter(v => v.filter(x => x !== s)) }));
     if (appDateRange.from || appDateRange.to) tags.push({ label: `App date: ${appDateRange.from || '∞'}→${appDateRange.to || '∞'}`, clear: () => setAppDateRange({ from: '', to: '' }) });
+    httFeatFilter.forEach(f => tags.push({
+      label: `HTT: ${f.replace('htt_', '').replace('_', ' ')}`,
+      clear: () => setHttFeatFilter(v => v.filter(x => x !== f))
+    }));
     return tags;
   }, [filters, jobTypeFilter, featuresFilter, featDateRange, registeredDateRange, lastLoginDateRange, locationSearch, websiteSearch, noteSearch, tokensFilter, appStatusFilter, appDateRange]);
-
-
 
   // ─── RENDER ───────────────────────────────────────────────────────────────
   return (
@@ -1162,8 +1389,10 @@ export default function Companies() {
               </ColHeader>
 
               {/* Features */}
+              {/* <ColHeader col="features" label="Features Used"
+                filterActive={featuresFilter.length > 0 || featDateRange.from || featDateRange.to}> */}
               <ColHeader col="features" label="Features Used"
-                filterActive={featuresFilter.length > 0 || featDateRange.from || featDateRange.to}>
+                filterActive={featuresFilter.length > 0 || featDateRange.from || featDateRange.to || httFeatFilter.length > 0}>
                 <div className="space-y-1">
                   <MultiSelectDropdown
                     values={featuresFilter}
@@ -1182,6 +1411,19 @@ export default function Companies() {
                   {!isSingleFeature && featuresFilter.length !== 1 && (
                     <p className="text-[9px] text-slate-400 italic">Select exactly 1 feature to enable date filter</p>
                   )}
+                  {/* <div className="pt-1.5 border-t border-purple-100">
+                    <div className="flex items-center gap-1 mb-1 px-0.5">
+                      <span className="text-[8px] font-black text-purple-500 uppercase tracking-wider">HTT Filters</span>
+                    </div>
+                    <MultiSelectDropdown
+                      values={httFeatFilter}
+                      onChange={v => { setHttFeatFilter(v); setPage(1); }}
+                      options={HTT_FEATURE_OPTIONS}
+                      placeholder="Filter HTT features"
+                      label="HTT"
+                      colorFn={() => 'text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded-full font-semibold border border-purple-200'}
+                    />
+                  </div> */}
                 </div>
               </ColHeader>
 
@@ -1465,6 +1707,10 @@ export default function Companies() {
                           <span className="text-[9px] font-black text-purple-600 uppercase tracking-widest">Clkd</span>
                         </div>
 
+                        <div className="col-span-3 text-center text-[10px] font-bold text-purple-600 bg-purple-50 border-l">
+                          HTT
+                        </div>
+
                       </div>
                       {/* <div
                         className="grid border-b border-slate-200 bg-slate-50"
@@ -1546,7 +1792,7 @@ export default function Companies() {
                         </div>
 
                         <div className="flex items-center justify-center py-0.5 border-r-2 border-slate-200">
-                          <span className="text-[8px] font-semibold text-slate-400">FA</span>
+                          <span className="text-[8px] font-semibold text-indigo-400 cursor-pointer" title="Click chip to view filters">FA ↗</span>
                         </div>
 
                         {/* Clicked */}
@@ -1568,6 +1814,16 @@ export default function Companies() {
 
                         <div className="flex items-center justify-center py-0.5">
                           <span className="text-[8px] font-semibold text-slate-400">U</span>
+                        </div>
+
+                        <div className="flex items-center justify-center py-0.5 border-l border-slate-200">
+                          <span className="text-[9px] text-slate-400">V</span>
+                        </div>
+                        <div className="flex items-center justify-center py-0.5 border-l border-slate-200">
+                          <span className="text-[9px] text-indigo-400 cursor-pointer" title="Click chip to view saved filters">FS ↗</span>
+                        </div>
+                        <div className="flex items-center justify-center py-0.5 border-l border-slate-200">
+                          <span className="text-[9px] text-indigo-400 cursor-pointer" title="Click chip to view applied filters">FA ↗</span>
                         </div>
 
                       </div>
@@ -1659,8 +1915,17 @@ export default function Companies() {
                           <FeatureChip count={c.feat_saved_count} active={c.feat_saved_count > 0} title="Saved" />
                         </div>
 
-                        <div className="flex items-center justify-center p-1.5 border-r-2 border-slate-200">
+                        {/* <div className="flex items-center justify-center p-1.5 border-r-2 border-slate-200">
                           <FeatureChip count={c.feat_filter_applied_count} active={c.feat_filter_applied_count > 0} title="Filter Applied" />
+                        </div> */}
+
+                        <div className="flex items-center justify-center p-1.5 border-r-2 border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors"
+                          onClick={() => openPopup('db_fa', c.employer_id)}>
+                          <FeatureChip
+                            count={c.feat_database_filter_applied_count || 0}
+                            active={(c.feat_database_filter_applied_count || 0) > 0}
+                            title="Database Filters — click to view"
+                          />
                         </div>
 
                         <div className="flex items-center justify-center p-1.5 border-r border-slate-200">
@@ -1681,6 +1946,35 @@ export default function Companies() {
 
                         <div className="flex items-center justify-center p-1.5">
                           <FeatureChip count={c.feat_clicked_unsave_count} active={c.feat_clicked_unsave_count > 0} title="Unsave Click" />
+                        </div>
+
+                        {/* ================= HTT ================= */}
+
+                        {/* HTT - V */}
+                        <div className="flex items-center justify-center p-1.5 border-l border-slate-200">
+                          <FeatureChip
+                            count={c.feat_htt_visit_count || 0}
+                            active={(c.feat_htt_visit_count || 0) > 0}
+                            title="HTT Visits"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 border-r border-slate-200 cursor-pointer hover:bg-slate-50 transition-colors"
+                          onClick={() => openPopup('htt_fs', c.employer_id)}>
+                          <FeatureChip
+                            count={c.feat_htt_saved_filter_count || 0}
+                            active={(c.feat_htt_saved_filter_count || 0) > 0}
+                            title="HTT Saved Filters — click to view"
+                          />
+                        </div>
+
+                        <div className="flex items-center justify-center p-1.5 cursor-pointer hover:bg-slate-50 transition-colors"
+                          onClick={() => openPopup('htt_fa', c.employer_id)}>
+                          <FeatureChip
+                            count={c.feat_htt_filter_applied_count || 0}
+                            active={(c.feat_htt_filter_applied_count || 0) > 0}
+                            title="HTT Applied Filters — click to view"
+                          />
                         </div>
 
                       </div>
@@ -1812,6 +2106,7 @@ export default function Companies() {
             className="px-2 py-1 rounded-lg text-xs border border-slate-200 text-slate-500 disabled:opacity-30 hover:bg-slate-50">»</button>
         </div>
       </div>
+      <FilterPopup popup={popup} onClose={() => setPopup({ open: false, type: '', data: [] })} />
     </div>
   );
 }
